@@ -14,28 +14,38 @@ npm run dev
 
 Open the local address printed in the terminal.
 
-## Create a production build
+## Create a Cloudflare Pages build
 
 ```bash
 npm ci
 npm run build
 ```
 
-The verified production output is generated in `dist/`.
+The static production site is generated in `dist/client/`.
 
 ## Hosting choices
 
-### Cloudflare Workers
+### Cloudflare Pages
 
-The production build generates a Cloudflare-compatible Worker in
-`dist/server/index.js` and static assets under `dist/assets/`.
+Create a Pages project from this repository with:
+
+- Build command: `npm run build`
+- Build output directory: `dist/client`
+
+Cloudflare Pages will deploy the static site and the `functions/api/contact.ts`
+endpoint. In **Settings → Variables and Secrets**, add these encrypted secrets:
+
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL` (for example, `Pipelix Website <hello@yourdomain.com>`)
+- `CONTACT_TO_EMAIL` (the inbox that receives contact requests)
+
+`RESEND_FROM_EMAIL` must use a domain verified in Resend. Copy
+`.dev.vars.example` to `.dev.vars` for local secret values; do not commit it.
 
 ### Vercel or another Node host
 
-Connect the repository, select Node.js 20+, use `npm ci` for installation,
-and `npm run build` as the build command. If your provider does not recognize
-Vinext automatically, deploy the generated Cloudflare Worker output or host
-the project using Cloudflare Workers.
+Connect the repository, select Node.js 22.13+, use `npm ci` for installation,
+and `npm run build` as the build command. Deploy `dist/client` as static files.
 
 ## Contact form
 
@@ -50,4 +60,3 @@ or a form service before launch.
 - `app/globals.css` — layout, colors, responsive styling, and animation
 - `app/layout.tsx` — page title and metadata
 - `public/favicon.svg` — Pipelix logo asset
-

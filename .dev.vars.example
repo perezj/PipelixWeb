@@ -1,0 +1,5 @@
+# Local development only. Copy to .dev.vars and replace the placeholders.
+# In Cloudflare Pages, create these as encrypted production secrets instead.
+RESEND_API_KEY=re_HhK2egGB_CtYmjKDqZ7nzFmAziNiF1edb
+RESEND_FROM_EMAIL="Pipelix Website <send.bank2excel.mx>"
+CONTACT_TO_EMAIL=perezj@gmail.com
