@@ -30,7 +30,14 @@ async function fileForRequest(url) {
     const file = await stat(filePath);
     return file.isDirectory() ? resolve(filePath, "index.html") : filePath;
   } catch {
-    return null;
+    if (filePath.endsWith(".html")) return null;
+    try {
+      const htmlFilePath = `${filePath}.html`;
+      await stat(htmlFilePath);
+      return htmlFilePath;
+    } catch {
+      return null;
+    }
   }
 }
 

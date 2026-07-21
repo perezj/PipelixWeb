@@ -29,25 +29,24 @@ if ($nodeVersion -lt [version]'22.13.0') {
     throw "Node.js 22.13 or later is required; found $nodeVersion. Upgrade Node.js, then run this script again."
 }
 
+$devPort = if ($env:PORT) { [int]$env:PORT } else { 3000 }
+$existingConnections = Get-NetTCPConnection -LocalPort $devPort -State Listen -ErrorAction SilentlyContinue
+foreach ($processId in ($existingConnections | Select-Object -ExpandProperty OwningProcess -Unique)) {
+    $existingProcess = Get-Process -Id $processId -ErrorAction SilentlyContinue
+    if ($existingProcess) {
+        Write-Host "Stopping process $($existingProcess.ProcessName) (PID $processId) already listening on port $devPort..."
+        Stop-Process -Id $processId -Force
+    }
+}
+if ($existingConnections) {
+    Start-Sleep -Milliseconds 500
+}
+
 if ($Install -or -not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'node_modules'))) {
     Write-Host 'Installing dependencies from package-lock.json...'
     Invoke-Npm ci
 }
 
-Write-Host 'Building the application...'
-& npm.cmd run build
-$buildExitCode = $LASTEXITCODE
-if ($buildExitCode -ne 0) {
-    $staticEntryPoint = Join-Path $PSScriptRoot 'dist\client\index.html'
-    # Vinext can assert while closing its Windows async handle after completing
-    # a successful static export. Keep the workaround narrow and verify output.
-    if ($buildExitCode -eq -1073740791 -and (Test-Path -LiteralPath $staticEntryPoint)) {
-        Write-Warning 'Vinext completed the static export but crashed during Windows cleanup. Continuing with the generated site.'
-    }
-    else {
-        throw "npm run build failed with exit code $buildExitCode."
-    }
-}
-
-Write-Host 'Starting the website. Press Ctrl+C to stop it.'
-Invoke-Npm run start
+$env:PORT = $devPort
+Write-Host 'Starting the dev server. Press Ctrl+C to stop it.'
+Invoke-Npm run dev
