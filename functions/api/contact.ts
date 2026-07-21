@@ -16,6 +16,13 @@ type ContactRequest = {
   team?: unknown;
   message?: unknown;
   website?: unknown;
+  landingPage?: unknown;
+  utm_source?: unknown;
+  utm_medium?: unknown;
+  utm_campaign?: unknown;
+  utm_term?: unknown;
+  utm_content?: unknown;
+  gclid?: unknown;
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,6 +55,9 @@ export const onRequestPost = async ({ request, env }: PagesContext<Env>): Promis
   const company = text(payload.company, 160);
   const team = text(payload.team, 80);
   const message = text(payload.message, 4_000);
+  const attribution = ["landingPage", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid"]
+    .map((key) => [key, text(payload[key as keyof ContactRequest], 500)] as const)
+    .filter(([, value]) => value);
 
   if (!name || !email || !emailPattern.test(email) || !company || !team || !message) {
     return Response.json({ error: "Please complete all fields with valid information." }, { status: 400 });
@@ -68,7 +78,7 @@ export const onRequestPost = async ({ request, env }: PagesContext<Env>): Promis
       to: [env.CONTACT_TO_EMAIL],
       reply_to: email,
       subject: `Pipelix workflow review — ${company}`,
-      text: `Name: ${name}\nEmail: ${email}\nCompany: ${company}\nTeam size: ${team}\n\nMessage:\n${message}`,
+      text: `Name: ${name}\nEmail: ${email}\nCompany: ${company}\nTeam size: ${team}\n\nMessage:\n${message}\n\nAttribution:\n${attribution.map(([key, value]) => `${key}: ${value}`).join("\n") || "Direct / unavailable"}`,
     }),
   });
 
