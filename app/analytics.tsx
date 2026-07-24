@@ -1,7 +1,7 @@
 "use client";
 import { usePathname, useSearchParams } from "next/navigation";
 import Script from "next/script";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 declare global {
   interface Window {
@@ -11,24 +11,29 @@ declare global {
 }
 
 export function Analytics() {
-  const id = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const rawId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const id = rawId && /^[A-Za-z0-9-]+$/.test(rawId) ? rawId : undefined;
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const hasSkippedInitialPageTracking = useRef(false);
-  const queryString = searchParams?.toString() ?? "";
+  const lastTrackedPagePath = useRef<string>();
+  const queryString = useMemo(() => searchParams?.toString() ?? "", [searchParams]);
 
   useEffect(() => {
     if (!id || !pathname) return;
-    if (!hasSkippedInitialPageTracking.current) {
-      hasSkippedInitialPageTracking.current = true;
-      return;
-    }
-    if (window.gtag) {
-      const pagePath = queryString ? `${pathname}?${queryString}` : pathname;
+    const pagePath = queryString ? `${pathname}?${queryString}` : pathname;
+    if (lastTrackedPagePath.current === pagePath) return;
+
+    const trackPageView = () => {
+      if (!window.gtag) return false;
       const pageView = { page_path: pagePath, page_location: window.location.href };
       window.gtag("event", "page_view", pageView);
-      return;
-    }
+      lastTrackedPagePath.current = pagePath;
+      return true;
+    };
+
+    if (trackPageView()) return;
+    const timer = window.setTimeout(trackPageView, 0);
+    return () => window.clearTimeout(timer);
   }, [id, pathname, queryString]);
 
   if (!id) return null;
