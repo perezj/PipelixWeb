@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://pipelix.ai/sitemap.xml
+Host: https://pipelix.ai
