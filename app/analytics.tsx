@@ -15,7 +15,7 @@ export function Analytics() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const hasSkippedInitialPageTracking = useRef(false);
-  const query = searchParams?.toString() ?? "";
+  const queryString = searchParams?.toString() ?? "";
 
   useEffect(() => {
     if (!id || !pathname) return;
@@ -24,12 +24,12 @@ export function Analytics() {
       return;
     }
     if (window.gtag) {
-      const pagePath = query ? `${pathname}?${query}` : pathname;
-      const pageView = { page_path: pagePath, page_location: window.location.href, page_title: document.title };
+      const pagePath = queryString ? `${pathname}?${queryString}` : pathname;
+      const pageView = { page_path: pagePath, page_location: window.location.href };
       window.gtag("event", "page_view", pageView);
       return;
     }
-  }, [id, pathname, query]);
+  }, [id, pathname, queryString]);
 
   if (!id) return null;
 
