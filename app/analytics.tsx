@@ -14,18 +14,19 @@ export function Analytics() {
   const id = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const hasTrackedInitialPage = useRef(false);
+  const hasSkippedInitialPageTracking = useRef(false);
   const query = searchParams?.toString() ?? "";
 
   useEffect(() => {
     if (!id || !pathname) return;
-    if (!hasTrackedInitialPage.current) {
-      hasTrackedInitialPage.current = true;
+    if (!hasSkippedInitialPageTracking.current) {
+      hasSkippedInitialPageTracking.current = true;
       return;
     }
     if (window.gtag) {
       const pagePath = query ? `${pathname}?${query}` : pathname;
-      window.gtag("event", "page_view", { page_path: pagePath, page_location: window.location.href, page_title: document.title });
+      const pageView = { page_path: pagePath, page_location: window.location.href, page_title: document.title };
+      window.gtag("event", "page_view", pageView);
       return;
     }
   }, [id, pathname, query]);
